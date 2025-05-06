@@ -6,7 +6,7 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center space-y-8">
           <h1 className="text-6xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500">
             ArrowKill
-          </h1> 
+          </h1>  
 
           <p className="text-xl text-gray-300 text-center max-w-2xl">
             Precision. Power. Performance.
