@@ -1,0 +1,157 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+node_modules
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+coverage
+
+# next.js
+.next/
+out/
+
+# production
+build/
+dist/
+
+# misc
+.DS_Store
+*.pem
+*app.log
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# python venv
+venv/
+ENV/
+.venv
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# package lock
+package-lock.json
+yarn.lock
+
+#sage maker project
+model.tar.gz
+
+# IDEs and editors
+.idea/
+# .vscode/
+*.swp
+*.swo
+*.swn
+.vs/
+*.sublime-workspace
+*.sublime-project
+
+# ML specific
+*.h5
+*.pkl
+*.model
+# models/
+checkpoints/
+logs/
+wandb/
+mlruns/
+tensorboard/
+
+# Temporary files
+requirement.txt
+db_upload_failures.txt
+2024-SEIA-MPL-08.01.2024.xlsx
+vscode/
+
+# MongoDB
+mongodb_data/
+
+# Model files
+detect_model.pt
+detect_model.pt.*
+segment_model.pt
+segment_model.pt.*
+yolo11n-seg.pt
+weights/hub/MNJjEvKZrMciI7JuLMz2/best.pt
+FastSam-x.pt
+/weights/hub/MNJjEvKZrMciI7JuLMz2/best.pt
+model_- 14 april 2025 16_25.pt
+detection.pt
+solar_detection.pt
+detectation_model_2.pt
+detectation_model_2.pt.*
+# Sitemap files
+public/robots.txt
+public/sitemap*.xml
+sitemap-0.xml
+sitemap.xml
+
+# React Native specific
+
+# Xcode
+apps/mobile/build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+**/.xcode.env.local
+
+# Android/IntelliJ
+.gradle
+local.properties
+*.iml
+*.hprof
+.cxx/
+*.keystore
+!debug.keystore
+
+# fastlane
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# Bundle artifact
+*.jsbundle
+
+# Ruby / CocoaPods
+**/Pods/
+vendor/bundle/
+
+# Metro
+.metro-health-check*
