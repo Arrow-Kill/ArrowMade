@@ -3,6 +3,7 @@
 import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
+import { suppressGoogleOAuthErrors } from '@/lib/google-auth-utils';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -11,8 +12,11 @@ function AuthPageContent() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
-  // Redirect if user is already authenticated
+  // Suppress Google OAuth console errors and redirect if user is already authenticated
   useEffect(() => {
+    // Suppress the Cross-Origin-Opener-Policy console errors from Google OAuth
+    suppressGoogleOAuthErrors();
+
     if (user) {
       router.push('/chat');
     }
