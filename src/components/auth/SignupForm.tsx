@@ -6,10 +6,10 @@ import { Eye, EyeOff, Loader2, Lock, Mail, User } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface SignupFormProps {
-    onSwitchToLogin: () => void;
+    onSwitchToLoginAction: () => void;
 }
 
-function SignupFormContent({ onSwitchToLogin }: SignupFormProps) {
+function SignupFormContent({ onSwitchToLoginAction }: SignupFormProps) {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -246,7 +246,7 @@ function SignupFormContent({ onSwitchToLogin }: SignupFormProps) {
                     <p className="text-gray-300">
                         Already have an account?{' '}
                         <button
-                            onClick={onSwitchToLogin}
+                            onClick={onSwitchToLoginAction}
                             className="text-green-400 hover:text-green-300 font-medium transition-colors duration-200"
                         >
                             Sign in
@@ -258,17 +258,17 @@ function SignupFormContent({ onSwitchToLogin }: SignupFormProps) {
     );
 }
 
-export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
+export default function SignupForm({ onSwitchToLoginAction }: SignupFormProps) {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
         console.error('Google Client ID not found. Please check your environment variables.');
-        return <SignupFormContent onSwitchToLogin={onSwitchToLogin} />;
+        return <SignupFormContent onSwitchToLoginAction={onSwitchToLoginAction} />;
     }
 
     return (
         <GoogleOAuthProvider clientId={clientId}>
-            <SignupFormContent onSwitchToLogin={onSwitchToLogin} />
+            <SignupFormContent onSwitchToLoginAction={onSwitchToLoginAction} />
         </GoogleOAuthProvider>
     );
 } 
