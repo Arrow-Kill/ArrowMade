@@ -76,6 +76,8 @@ function LoginFormContent({ onSwitchToSignupAction }: LoginFormProps) {
                             size="large"
                             width="100%"
                             text="continue_with"
+                            useOneTap={false}
+                            auto_select={false}
                         />
                     )}
                 </div>
