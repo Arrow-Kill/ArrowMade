@@ -10,14 +10,15 @@ interface RouteParams {
 // GET - Get a specific chat with messages
 export async function GET(
   request: NextRequest,
-  { params }: { params: RouteParams }
+  { params }: { params: Promise<RouteParams> }
 ) {
   return withAuth(request, async (req: AuthenticatedRequest) => {
     try {
       await connectDB();
+      const resolvedParams = await params;
 
       const chat = await Chat.findOne({
-        chatId: params.chatId,
+        chatId: resolvedParams.chatId,
         userId: req.user!.id,
         userType: req.user!.type
       });
@@ -50,11 +51,12 @@ export async function GET(
 // PUT - Update chat title
 export async function PUT(
   request: NextRequest,
-  { params }: { params: RouteParams }
+  { params }: { params: Promise<RouteParams> }
 ) {
   return withAuth(request, async (req: AuthenticatedRequest) => {
     try {
       await connectDB();
+      const resolvedParams = await params;
 
       const { title } = await request.json();
 
@@ -67,7 +69,7 @@ export async function PUT(
 
       const chat = await Chat.findOneAndUpdate(
         {
-          chatId: params.chatId,
+          chatId: resolvedParams.chatId,
           userId: req.user!.id,
           userType: req.user!.type
         },
@@ -101,14 +103,15 @@ export async function PUT(
 // DELETE - Delete a chat
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: RouteParams }
+  { params }: { params: Promise<RouteParams> }
 ) {
   return withAuth(request, async (req: AuthenticatedRequest) => {
     try {
       await connectDB();
+      const resolvedParams = await params;
 
       const chat = await Chat.findOneAndDelete({
-        chatId: params.chatId,
+        chatId: resolvedParams.chatId,
         userId: req.user!.id,
         userType: req.user!.type
       });
