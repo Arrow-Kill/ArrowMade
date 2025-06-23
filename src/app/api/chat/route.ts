@@ -189,12 +189,10 @@ export async function POST(request: NextRequest) {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
-          'Access-Control-Allow-Origin': process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com' : '*',
+          'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_SITE_URL || 'https://www.arrowkill.com' : '*',
           'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
           'Access-Control-Allow-Credentials': 'true',
-          'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
-          'Cross-Origin-Embedder-Policy': 'unsafe-none',
         },
       });
 
@@ -244,8 +242,6 @@ export async function OPTIONS() {
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Allow-Credentials': 'true',
-      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
-      'Cross-Origin-Embedder-Policy': 'unsafe-none',
     },
   });
 }
