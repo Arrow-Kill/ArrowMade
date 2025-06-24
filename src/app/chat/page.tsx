@@ -2,7 +2,7 @@
 
 import { AuthProvider, useAuth } from '@/lib/auth-context';
 import { useTheme } from '@/lib/theme-context';
-import { Bot, ChevronLeft, ChevronRight, LogOut, MessageSquare, Moon, Plus, Send, Sun, User } from 'lucide-react';
+import { Bot, ChevronLeft, ChevronRight, Edit3, LogOut, MessageSquare, Moon, Plus, Send, Sun, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -146,7 +146,7 @@ function ChatPageContent() {
             {/* Fixed Sidebar */}
             <div className={`${isSidebarCollapsed ? 'w-16' : 'w-80'} flex-shrink-0 ${theme.bg.secondary} border-r ${theme.border.primary} flex flex-col transition-all duration-300 ease-in-out`}>
                 {/* Header */}
-                <div className={`flex-shrink-0 p-6 border-b ${theme.border.primary}`}>
+                <div className={`flex-shrink-0 p-3 border-b ${theme.border.primary}`}>
                     <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} mb-4`}>
                         {!isSidebarCollapsed && (
                             <h1 className={`text-xl font-bold ${theme.text.primary}`}>
@@ -182,7 +182,7 @@ function ChatPageContent() {
                             className={`w-full flex items-center justify-center p-3 ${theme.accent.primary} ${theme.text.inverse} font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] shadow-sm`}
                             title="New Chat"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Edit3 className="w-4 h-4" />
                         </button>
                     )}
                 </div>
@@ -257,7 +257,7 @@ function ChatPageContent() {
                 </div>
 
                 {/* User Info - Fixed at bottom */}
-                <div className={`flex-shrink-0 p-4 border-t ${theme.border.primary}`}>
+                <div className={`flex-shrink-0 p-2 border-t ${theme.border.primary}`}>
                     {!isSidebarCollapsed ? (
                         <>
                             <div className={`flex items-center gap-3 ${theme.text.primary} mb-3 p-3 rounded-lg ${theme.bg.tertiary}`}>
@@ -287,14 +287,19 @@ function ChatPageContent() {
                             </button>
                         </>
                     ) : (
-                        <div className="space-y-2">
-                            <button
-                                onClick={handleLogout}
-                                className={`w-full flex items-center justify-center p-3 ${theme.text.secondary} ${theme.hover} rounded-lg transition-all duration-200 border ${theme.border.primary}`}
-                                title="Sign Out"
-                            >
-                                <LogOut className="w-4 h-4" />
-                            </button>
+                        <div className="flex justify-center">
+                            {user.avatar ? (
+                                <img
+                                    src={user.avatar}
+                                    alt={user.name}
+                                    className="w-10 h-10 rounded-full"
+                                    title={user.name}
+                                />
+                            ) : (
+                                <div className={`w-10 h-10 ${theme.accent.primary} rounded-full flex items-center justify-center`} title={user.name}>
+                                    <User className={`w-5 h-5 ${theme.text.inverse}`} />
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

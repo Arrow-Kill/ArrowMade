@@ -35,6 +35,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if email is verified
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        { 
+          error: 'Please verify your email address before logging in. Check your inbox for the verification link.',
+          requiresVerification: true 
+        },
+        { status: 403 }
+      );
+    }
+
     // Generate JWT token
     const token = signToken({
       userId: user._id.toString(),
@@ -48,6 +59,7 @@ export async function POST(request: NextRequest) {
       name: user.name,
       email: user.email,
       avatar: user.avatar,
+      emailVerified: user.emailVerified,
       createdAt: user.createdAt,
     };
 
