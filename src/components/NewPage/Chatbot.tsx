@@ -132,35 +132,191 @@ const EnhancedList: React.FC<{ items: string[] }> = ({ items }) => {
     );
 };
 
-const MessageContent: React.FC<{ content: string; isStreaming?: boolean }> = ({ content, isStreaming }) => {
+const StreamingCodeBlock: React.FC<{ language: string; isComplete: boolean; isStreaming?: boolean; children: string }> = ({ language, isComplete, isStreaming = false, children }) => {
+    const { theme, isDark } = useTheme();
+    const [copied, setCopied] = useState(false);
+
+    const copyToClipboard = async () => {
+        try {
+            await navigator.clipboard.writeText(children);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    };
+
+    if (isComplete) {
+        return <CodeBlock language={language}>{children}</CodeBlock>;
+    }
+
+    // For streaming/incomplete code blocks, show the terminal container immediately
+    return (
+        <div className="relative group my-4">
+            <div className={`flex items-center justify-between ${theme.bg.tertiary} px-4 py-3 rounded-t-lg border ${theme.border.primary}`}>
+                <div className="flex items-center space-x-2">
+                    <Code className={`h-4 w-4 ${theme.text.primary}`} />
+                    <span className={`text-sm ${theme.text.primary} font-medium`}>
+                        {language.toUpperCase()}
+                    </span>
+                    {isStreaming && (
+                        <div className={`flex items-center space-x-2 ${theme.text.tertiary}`}>
+                            <div className="flex space-x-1">
+                                <div className={`w-1.5 h-1.5 ${theme.accent.primary} rounded-full animate-bounce`}></div>
+                                <div className={`w-1.5 h-1.5 ${theme.accent.primary} rounded-full animate-bounce`} style={{ animationDelay: '0.1s' }}></div>
+                                <div className={`w-1.5 h-1.5 ${theme.accent.primary} rounded-full animate-bounce`} style={{ animationDelay: '0.2s' }}></div>
+                            </div>
+                            <span className="text-xs">Writing...</span>
+                        </div>
+                    )}
+                </div>
+                <button
+                    onClick={copyToClipboard}
+                    className={`flex items-center space-x-1 ${theme.text.secondary} ${theme.hover} px-3 py-1.5 rounded-md transition-colors`}
+                    disabled={!children}
+                >
+                    {copied ? (
+                        <>
+                            <Check className="h-4 w-4 text-green-500" />
+                            <span className="text-xs font-medium">Copied!</span>
+                        </>
+                    ) : (
+                        <>
+                            <Copy className="h-4 w-4" />
+                            <span className="text-xs font-medium">Copy</span>
+                        </>
+                    )}
+                </button>
+            </div>
+            <div
+                className="rounded-b-lg border border-t-0"
+                style={{
+                    borderColor: isDark ? '#374151' : '#d1d5db',
+                    backgroundColor: isDark ? '#1f2937' : '#f9fafb',
+                    minHeight: '4rem',
+                }}
+            >
+                <SyntaxHighlighter
+                    language={language}
+                    style={isDark ? oneDark : oneLight}
+                    customStyle={{
+                        margin: 0,
+                        borderRadius: '0 0 0.5rem 0.5rem',
+                        border: 'none',
+                        backgroundColor: 'transparent',
+                        fontSize: '0.875rem',
+                        lineHeight: '1.5',
+                        padding: '1rem',
+                    }}
+                    showLineNumbers={true}
+                    lineNumberStyle={{
+                        color: isDark ? '#6b7280' : '#9ca3af',
+                        fontSize: '0.75rem',
+                        paddingRight: '1rem',
+                        borderRight: `1px solid ${isDark ? '#374151' : '#d1d5db'}`,
+                        marginRight: '1rem',
+                    }}
+                >
+                    {children || ' '}
+                </SyntaxHighlighter>
+                {isStreaming && (
+                    <div className={`px-4 pb-2 ${theme.text.tertiary} text-sm italic`}>
+                        <span className="animate-pulse">●</span> Streaming code...
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const MessageContent: React.FC<{ content: string; isStreaming?: boolean }> = ({ content, isStreaming = false }) => {
     const { theme } = useTheme();
 
-    const parseContent = (text: string) => {
-        const parts: (string | { type: 'code'; content: string; language: string })[] = [];
+    const parseContentWithStreaming = (text: string, isStreamingActive: boolean) => {
+        const parts: (string | { type: 'code'; content: string; language: string; isComplete: boolean })[] = [];
 
-        // Regex to match code blocks with optional language
+        // First, handle complete code blocks
         const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
         let lastIndex = 0;
         let match;
+        const completeMatches: { start: number; end: number; language: string; content: string }[] = [];
 
         while ((match = codeBlockRegex.exec(text)) !== null) {
+            completeMatches.push({
+                start: match.index,
+                end: match.index + match[0].length,
+                language: match[1] || 'javascript',
+                content: match[2].trim()
+            });
+        }
+
+        // Check for incomplete code blocks (streaming)
+        const incompleteCodeRegex = /```(\w+)?\n?([\s\S]*)$/;
+        const incompleteMatch = incompleteCodeRegex.exec(text);
+
+        let hasIncompleteCode = false;
+        let incompleteCodeStart = -1;
+        let incompleteLanguage = '';
+        let incompleteContent = '';
+
+        if (incompleteMatch && isStreamingActive) {
+            const potentialStart = incompleteMatch.index;
+            // Check if this incomplete match is not part of a complete code block
+            const isPartOfComplete = completeMatches.some(complete =>
+                potentialStart >= complete.start && potentialStart < complete.end
+            );
+
+            if (!isPartOfComplete) {
+                hasIncompleteCode = true;
+                incompleteCodeStart = potentialStart;
+                incompleteLanguage = incompleteMatch[1] || 'javascript';
+                incompleteContent = incompleteMatch[2];
+            }
+        }
+
+        lastIndex = 0;
+
+        // Add complete code blocks
+        for (const complete of completeMatches) {
             // Add text before code block
-            if (match.index > lastIndex) {
-                const beforeText = text.slice(lastIndex, match.index);
+            if (complete.start > lastIndex) {
+                const beforeText = text.slice(lastIndex, complete.start);
                 if (beforeText) parts.push(beforeText);
             }
 
-            // Add code block
-            const language = match[1] || 'javascript';
-            const code = match[2].trim();
-            parts.push({ type: 'code', content: code, language });
+            // Add complete code block
+            parts.push({
+                type: 'code',
+                content: complete.content,
+                language: complete.language,
+                isComplete: true
+            });
 
-            lastIndex = match.index + match[0].length;
+            lastIndex = complete.end;
         }
 
-        // Add remaining text
-        if (lastIndex < text.length) {
-            parts.push(text.slice(lastIndex));
+        // Handle incomplete code block
+        if (hasIncompleteCode) {
+            // Add text before incomplete code block
+            if (incompleteCodeStart > lastIndex) {
+                const beforeText = text.slice(lastIndex, incompleteCodeStart);
+                if (beforeText) parts.push(beforeText);
+            }
+
+            // Add incomplete code block
+            parts.push({
+                type: 'code',
+                content: incompleteContent,
+                language: incompleteLanguage,
+                isComplete: false
+            });
+
+            lastIndex = text.length;
+        } else {
+            // Add remaining text
+            if (lastIndex < text.length) {
+                parts.push(text.slice(lastIndex));
+            }
         }
 
         return parts;
@@ -250,7 +406,7 @@ const MessageContent: React.FC<{ content: string; isStreaming?: boolean }> = ({ 
         return result;
     };
 
-    const parts = parseContent(content);
+    const parts = parseContentWithStreaming(content, isStreaming);
 
     return (
         <div className={`${theme.text.primary} leading-relaxed`}>
@@ -262,7 +418,17 @@ const MessageContent: React.FC<{ content: string; isStreaming?: boolean }> = ({ 
                         </div>
                     );
                 } else {
-                    return <CodeBlock key={index} language={part.language}>{part.content}</CodeBlock>;
+                    // Render both complete and incomplete code blocks in the terminal
+                    return (
+                        <StreamingCodeBlock
+                            key={index}
+                            language={part.language}
+                            isComplete={part.isComplete}
+                            isStreaming={isStreaming && !part.isComplete}
+                        >
+                            {part.content}
+                        </StreamingCodeBlock>
+                    );
                 }
             })}
         </div>

@@ -7,7 +7,7 @@ interface User {
     name: string;
     email: string;
     avatar?: string;
-    verified?: boolean;
+    emailVerified?: boolean;
     type: 'regular' | 'google';
     createdAt: string;
 }
@@ -16,11 +16,14 @@ interface AuthContextType {
     user: User | null;
     token: string | null;
     isLoading: boolean;
+    signupSuccess: boolean;
+    signupMessage: string | null;
     login: (email: string, password: string) => Promise<void>;
     signup: (name: string, email: string, password: string) => Promise<void>;
     googleAuth: (credential: string) => Promise<void>;
     logout: () => void;
     error: string | null;
+    clearSignupSuccess: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [signupSuccess, setSignupSuccess] = useState(false);
+    const [signupMessage, setSignupMessage] = useState<string | null>(null);
 
     // Load token from localStorage on mount
     useEffect(() => {
@@ -107,6 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const signup = async (name: string, email: string, password: string) => {
         setIsLoading(true);
         setError(null);
+        setSignupSuccess(false);
+        setSignupMessage(null);
 
         try {
             const response = await fetch('/api/auth/signup', {
@@ -120,9 +127,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const data = await response.json();
 
             if (response.ok) {
-                setUser(data.user);
-                setToken(data.token);
-                localStorage.setItem('auth_token', data.token);
+                // New email verification flow - don't log the user in immediately
+                if (data.requiresVerification) {
+                    setSignupSuccess(true);
+                    setSignupMessage(data.message);
+                } else {
+                    // Fallback for if verification is disabled
+                    setUser(data.user);
+                    setToken(data.token);
+                    localStorage.setItem('auth_token', data.token);
+                }
             } else {
                 setError(data.error || 'Signup failed');
             }
@@ -169,15 +183,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('auth_token');
     };
 
+    const clearSignupSuccess = () => {
+        setSignupSuccess(false);
+        setSignupMessage(null);
+    };
+
     const value = {
         user,
         token,
         isLoading,
+        signupSuccess,
+        signupMessage,
         login,
         signup,
         googleAuth,
         logout,
         error,
+        clearSignupSuccess,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

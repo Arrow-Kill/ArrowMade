@@ -1,4 +1,4 @@
-import { signToken } from '@/lib/jwt';
+import { createVerificationUrl, generateVerificationToken, sendVerificationEmail } from '@/lib/email-service';
 import User from '@/lib/models/User';
 import connectDB from '@/lib/mongodb';
 import { NextRequest, NextResponse } from 'next/server';
@@ -26,42 +26,84 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
+    
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 409 }
-      );
+      // If user exists and is already verified, return error
+      if (existingUser.emailVerified) {
+        return NextResponse.json(
+          { error: 'User with this email already exists and is verified' },
+          { status: 409 }
+        );
+      }
+      
+      // If user exists but is not verified, allow re-signup (update info and resend verification)
+      const verificationToken = generateVerificationToken();
+      const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      
+      // Update existing user with new info and new verification token
+      existingUser.name = name.trim();
+      existingUser.password = password; // This will be hashed by the pre-save hook
+      existingUser.emailVerificationToken = verificationToken;
+      existingUser.tokenExpires = tokenExpires;
+      
+      await existingUser.save();
+      
+      // Send verification email
+      const verificationUrl = createVerificationUrl(verificationToken);
+      const emailSent = await sendVerificationEmail({
+        to: existingUser.email,
+        name: existingUser.name,
+        verificationUrl
+      });
+
+      if (!emailSent) {
+        return NextResponse.json(
+          { error: 'Failed to send verification email' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        message: 'Account updated. Please check your email to verify your account before logging in.',
+        emailSent: true,
+        requiresVerification: true
+      }, { status: 200 });
     }
 
     // Create new user
+    const verificationToken = generateVerificationToken();
+    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     const user = new User({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
+      emailVerified: false,
+      emailVerificationToken: verificationToken,
+      tokenExpires: tokenExpires,
     });
 
     await user.save();
 
-    // Generate JWT token
-    const token = signToken({
-      userId: user._id.toString(),
-      email: user.email,
-      type: 'regular'
+    // Send verification email
+    const verificationUrl = createVerificationUrl(verificationToken);
+    const emailSent = await sendVerificationEmail({
+      to: user.email,
+      name: user.name,
+      verificationUrl
     });
 
-    // Return user data (without password)
-    const userData = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      avatar: user.avatar,
-      createdAt: user.createdAt,
-    };
+    if (!emailSent) {
+      return NextResponse.json(
+        { error: 'User created but failed to send verification email' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
-      message: 'User created successfully',
-      user: userData,
-      token,
+      message: 'Account created successfully! Please check your email to verify your account before logging in.',
+      emailSent: true,
+      requiresVerification: true
     }, { status: 201 });
 
   } catch (error: any) {

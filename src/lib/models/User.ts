@@ -6,6 +6,11 @@ export interface IUser extends mongoose.Document {
   email: string;
   password: string;
   avatar?: string;
+  emailVerified: boolean;
+  emailVerificationToken?: string;
+  tokenExpires?: Date;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -38,6 +43,26 @@ const UserSchema = new mongoose.Schema<IUser>({
   avatar: {
     type: String,
     default: null
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationToken: {
+    type: String,
+    select: false // Don't include in queries by default
+  },
+  tokenExpires: {
+    type: Date,
+    select: false // Don't include in queries by default
+  },
+  passwordResetToken: {
+    type: String,
+    select: false // Don't include in queries by default
+  },
+  passwordResetExpires: {
+    type: Date,
+    select: false // Don't include in queries by default
   }
 }, {
   timestamps: true

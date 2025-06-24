@@ -17,8 +17,12 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id_here
 # JWT Secret for token signing (generate a random string)
 JWT_SECRET=your_jwt_secret_key_here
 
-# Site URL (for Google OAuth)
+# Site URL (for Google OAuth and email verification)
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Email Configuration (for verification emails)
+NEXT_PUBLIC_EMAIL=your_gmail_address@gmail.com
+NEXT_PUBLIC_PASS=your_gmail_app_password_here
 ```
 
 ## Setup Instructions:
@@ -45,6 +49,15 @@ openssl rand -base64 32
 
 ### 4. OpenRouter API Key
 You should already have this from your previous setup.
+
+### 5. Email Configuration (for Email Verification)
+1. Use a Gmail account for sending verification emails
+2. Enable 2-Factor Authentication on your Gmail account
+3. Generate an App Password:
+   - Go to Google Account settings → Security → 2-Step Verification → App passwords
+   - Generate a new app password for "Mail"
+   - Use this app password (not your regular Gmail password) for `NEXT_PUBLIC_PASS`
+4. Set `NEXT_PUBLIC_EMAIL` to your Gmail address
 
 ## Database Collections
 The system automatically creates two separate collections:
