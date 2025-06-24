@@ -2,9 +2,9 @@
 
 import { AlertCircle, CheckCircle, Loader2, Mail, RefreshCw } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
     const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'expired' | 'already-verified'>('loading');
     const [message, setMessage] = useState('');
     const [userEmail, setUserEmail] = useState('');
@@ -313,5 +313,31 @@ export default function VerifyEmailPage() {
         }
       `}</style>
         </div>
+    );
+}
+
+function LoadingFallback() {
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center p-4">
+            <div className="relative z-10 w-full max-w-md">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-2xl">
+                    <div className="text-center">
+                        <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
+                            <Loader2 className="w-8 h-8 text-white animate-spin" />
+                        </div>
+                        <h1 className="text-2xl font-bold text-white mb-2">Loading</h1>
+                        <p className="text-gray-300">Please wait...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default function VerifyEmailPage() {
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <VerifyEmailContent />
+        </Suspense>
     );
 }

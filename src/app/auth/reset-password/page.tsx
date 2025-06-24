@@ -3,7 +3,7 @@
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
 import { AlertCircle, CheckCircle, Eye, EyeOff, Loader2, Lock } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 function ResetPasswordPageContent() {
     const [status, setStatus] = useState<'loading' | 'valid' | 'invalid' | 'success' | 'error'>('loading');
@@ -308,10 +308,40 @@ function ResetPasswordPageContent() {
     );
 }
 
+function LoadingFallback() {
+    const { theme } = useTheme();
+
+    return (
+        <div className={`min-h-screen ${theme.bg.primary} flex items-center justify-center p-4`}>
+            <div className="w-full max-w-md">
+                <div className={`${theme.bg.secondary} p-8 rounded-2xl shadow-2xl border ${theme.border.primary}`}>
+                    <div className="text-center">
+                        <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-6" />
+                        <h1 className={`text-2xl font-bold ${theme.text.primary} mb-2`}>
+                            Loading
+                        </h1>
+                        <p className={`${theme.text.secondary}`}>
+                            Please wait...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function ResetPasswordPageWithSuspense() {
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <ResetPasswordPageContent />
+        </Suspense>
+    );
+}
+
 export default function ResetPasswordPage() {
     return (
         <ThemeProvider>
-            <ResetPasswordPageContent />
+            <ResetPasswordPageWithSuspense />
         </ThemeProvider>
     );
 } 
