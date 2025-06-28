@@ -6,7 +6,6 @@ import {
     AlertCircle,
     Bot,
     Check,
-    ChevronRight,
     Code,
     Copy,
     Lightbulb,
@@ -103,34 +102,6 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, language = 'javascript'
     );
 };
 
-const FancyText: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    return (
-        <div className="prose prose-invert max-w-none">
-            <div className="text-gray-200 leading-relaxed space-y-4">
-                {children}
-            </div>
-        </div>
-    );
-};
-
-const EnhancedList: React.FC<{ items: string[] }> = ({ items }) => {
-    return (
-        <div className="space-y-3 my-6">
-            {items.map((item, index) => (
-                <div key={index} className="flex items-start space-x-3 group">
-                    <div className="flex-shrink-0 mt-1">
-                        <div className="w-6 h-6 bg-gradient-to-r from-accent-500 to-secondary-500 rounded-full flex items-center justify-center">
-                            <ChevronRight className="h-3 w-3 text-white" />
-                        </div>
-                    </div>
-                    <div className="flex-1 bg-dark-600/30 rounded-lg p-3 border border-dark-600/50 group-hover:border-accent-500/30 transition-colors duration-200">
-                        <p className="text-gray-200 text-sm leading-relaxed">{item}</p>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-};
 
 const StreamingCodeBlock: React.FC<{ language: string; isComplete: boolean; isStreaming?: boolean; children: string }> = ({ language, isComplete, isStreaming = false, children }) => {
     const { theme, isDark } = useTheme();
@@ -322,9 +293,13 @@ const MessageContent: React.FC<{ content: string; isStreaming?: boolean }> = ({ 
         return parts;
     };
 
-    const parseInlineCode = (text: string) => {
-        const parts = text.split(/(`[^`]+`)/g);
+    const parseInlineFormatting = (text: string): React.ReactNode[] => {
+        // First handle inline code to protect it from other formatting
+        const codeRegex = /(`[^`]+`)/g;
+        const parts = text.split(codeRegex);
+
         return parts.map((part, index) => {
+            // Handle inline code
             if (part.startsWith('`') && part.endsWith('`')) {
                 return (
                     <code
@@ -335,73 +310,161 @@ const MessageContent: React.FC<{ content: string; isStreaming?: boolean }> = ({ 
                     </code>
                 );
             }
-            return part;
+
+            // For non-code parts, handle bold and italic
+            return parseTextFormatting(part, index);
         });
     };
 
-    const parseTextForLists = (text: string) => {
+    const parseTextFormatting = (text: string, baseIndex: number): React.ReactNode => {
+        // Handle **bold** text
+        const boldRegex = /(\*\*[^*]+\*\*)/g;
+        const boldParts = text.split(boldRegex);
+
+        return boldParts.map((boldPart, boldIndex) => {
+            if (boldPart.startsWith('**') && boldPart.endsWith('**')) {
+                const boldText = boldPart.slice(2, -2);
+                // Check for italic within bold
+                return (
+                    <strong key={`${baseIndex}-bold-${boldIndex}`} className={`font-semibold ${theme.text.primary}`}>
+                        {parseItalicFormatting(boldText, `${baseIndex}-bold-${boldIndex}`)}
+                    </strong>
+                );
+            }
+
+            // Handle *italic* text (but not ** which is bold)
+            return parseItalicFormatting(boldPart, `${baseIndex}-${boldIndex}`);
+        });
+    };
+
+    const parseItalicFormatting = (text: string, baseKey: string): React.ReactNode => {
+        const italicRegex = /(\*[^*]+\*)/g;
+        const italicParts = text.split(italicRegex);
+
+        return italicParts.map((italicPart, italicIndex) => {
+            if (italicPart.startsWith('*') && italicPart.endsWith('*') && !italicPart.startsWith('**')) {
+                return (
+                    <em key={`${baseKey}-italic-${italicIndex}`} className={`italic ${theme.text.primary}`}>
+                        {italicPart.slice(1, -1)}
+                    </em>
+                );
+            }
+            return italicPart;
+        });
+    };
+
+    const parseMarkdownText = (text: string) => {
         const lines = text.split('\n');
         const result: React.ReactNode[] = [];
-        let currentList: string[] = [];
+        let currentList: { items: string[], type: 'bullet' | 'numbered' }[] = [];
         let currentText = '';
+        let listIndex = 0;
 
-        lines.forEach((line, index) => {
-            if (line.trim().startsWith('- **') || line.trim().startsWith('- ')) {
-                if (currentText) {
-                    result.push(
-                        <div key={`text-${index}`} className="mb-4">
-                            {parseInlineCode(currentText)}
-                        </div>
-                    );
-                    currentText = '';
-                }
-
-                currentList.push(line.trim().substring(2));
-            } else if (line.trim() === '' && currentList.length > 0) {
+        const flushCurrentText = (index: number) => {
+            if (currentText.trim()) {
                 result.push(
-                    <div key={`list-${index}`} className="mb-6">
-                        <div className="space-y-3">
-                            {currentList.map((item, itemIndex) => (
-                                <div key={itemIndex} className="flex items-start space-x-3">
-                                    <div className={`w-2 h-2 ${theme.accent.primary} rounded-full mt-2 flex-shrink-0`}></div>
-                                    <div className={`${theme.text.primary} leading-relaxed`}>
-                                        {parseInlineCode(item)}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                    <div key={`text-${index}`} className="mb-4">
+                        {parseInlineFormatting(currentText.trim())}
                     </div>
                 );
+                currentText = '';
+            }
+        };
+
+        const flushCurrentList = (index: number) => {
+            if (currentList.length > 0) {
+                currentList.forEach((list, listIdx) => {
+                    result.push(
+                        <div key={`list-${index}-${listIdx}`} className="mb-6">
+                            <div className="space-y-3">
+                                {list.items.map((item, itemIndex) => (
+                                    <div key={itemIndex} className="flex items-start space-x-3">
+                                        {list.type === 'bullet' ? (
+                                            <div className={`w-2 h-2 ${theme.accent.primary} rounded-full mt-2 flex-shrink-0`}></div>
+                                        ) : (
+                                            <div className={`${theme.text.tertiary} text-sm font-medium mt-0.5 flex-shrink-0 min-w-[1.5rem]`}>
+                                                {itemIndex + 1}.
+                                            </div>
+                                        )}
+                                        <div className={`${theme.text.primary} leading-relaxed flex-1`}>
+                                            {parseInlineFormatting(item)}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                });
                 currentList = [];
-            } else {
+            }
+        };
+
+        lines.forEach((line, index) => {
+            const trimmedLine = line.trim();
+
+            // Handle headers (## or ###)
+            if (trimmedLine.startsWith('##')) {
+                flushCurrentText(index);
+                flushCurrentList(index);
+
+                const headerLevel = trimmedLine.startsWith('###') ? 3 : 2;
+                const headerText = trimmedLine.replace(/^#{2,3}\s*/, '');
+
+                result.push(
+                    <div key={`header-${index}`} className="mb-4 mt-6">
+                        {headerLevel === 2 ? (
+                            <h2 className={`text-xl font-bold ${theme.text.primary} mb-3 pb-2 border-b ${theme.border.primary}`}>
+                                {parseInlineFormatting(headerText)}
+                            </h2>
+                        ) : (
+                            <h3 className={`text-lg font-semibold ${theme.text.primary} mb-2`}>
+                                {parseInlineFormatting(headerText)}
+                            </h3>
+                        )}
+                    </div>
+                );
+            }
+            // Handle bullet points (- or *)
+            else if (trimmedLine.match(/^[-*]\s+/)) {
+                flushCurrentText(index);
+
+                const item = trimmedLine.replace(/^[-*]\s+/, '');
+                if (currentList.length === 0 || currentList[currentList.length - 1].type !== 'bullet') {
+                    currentList.push({ items: [item], type: 'bullet' });
+                } else {
+                    currentList[currentList.length - 1].items.push(item);
+                }
+            }
+            // Handle numbered lists (1. 2. etc.)
+            else if (trimmedLine.match(/^\d+\.\s+/)) {
+                flushCurrentText(index);
+
+                const item = trimmedLine.replace(/^\d+\.\s+/, '');
+                if (currentList.length === 0 || currentList[currentList.length - 1].type !== 'numbered') {
+                    currentList.push({ items: [item], type: 'numbered' });
+                } else {
+                    currentList[currentList.length - 1].items.push(item);
+                }
+            }
+            // Handle empty lines (end lists)
+            else if (trimmedLine === '') {
+                if (currentList.length > 0) {
+                    flushCurrentList(index);
+                }
+                currentText += line + '\n';
+            }
+            // Regular text
+            else {
+                if (currentList.length > 0) {
+                    flushCurrentList(index);
+                }
                 currentText += line + '\n';
             }
         });
 
-        if (currentText) {
-            result.push(
-                <div key="final-text" className="mb-4">
-                    {parseInlineCode(currentText)}
-                </div>
-            );
-        }
-
-        if (currentList.length > 0) {
-            result.push(
-                <div key="final-list" className="mb-6">
-                    <div className="space-y-3">
-                        {currentList.map((item, itemIndex) => (
-                            <div key={itemIndex} className="flex items-start space-x-3">
-                                <div className={`w-2 h-2 ${theme.accent.primary} rounded-full mt-2 flex-shrink-0`}></div>
-                                <div className={`${theme.text.primary} leading-relaxed`}>
-                                    {parseInlineCode(item)}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-        }
+        // Flush remaining content
+        flushCurrentText(lines.length);
+        flushCurrentList(lines.length);
 
         return result;
     };
@@ -414,7 +477,7 @@ const MessageContent: React.FC<{ content: string; isStreaming?: boolean }> = ({ 
                 if (typeof part === 'string') {
                     return (
                         <div key={index}>
-                            {parseTextForLists(part)}
+                            {parseMarkdownText(part)}
                         </div>
                     );
                 } else {
@@ -842,69 +905,97 @@ const Chatbot: React.FC<ChatbotProps> = ({ chatId: propChatId, initialMessage })
     return (
         <div className={`h-screen flex flex-col ${theme.bg.primary}`}>
             {/* Fixed Header */}
-            <div className={`flex-shrink-0 ${theme.bg.secondary} border-b ${theme.border.primary} p-4`}>
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                        <div className={`${theme.accent.primary} p-2 rounded-lg`}>
-                            <Bot className={`h-5 w-5 ${theme.text.inverse}`} />
+            <div className={`flex-shrink-0 ${theme.bg.secondary} border-b ${theme.border.primary} p-3 sm:p-4`}>
+                <div className="max-w-4xl mx-auto">
+                    {/* Mobile Layout - Centered */}
+                    <div className="flex sm:hidden items-center justify-center relative">
+                        <div className="flex items-center space-x-2">
+                            <div className={`${theme.accent.primary} p-1.5 rounded-lg`}>
+                                <Bot className={`h-4 w-4 ${theme.text.inverse}`} />
+                            </div>
+                            <div>
+                                <h1 className={`text-base font-semibold ${theme.text.primary}`}>
+                                    VisionChat
+                                </h1>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className={`text-lg font-semibold ${theme.text.primary}`}>
-                                VisionChat
-                            </h1>
-                            <p className={`text-xs ${theme.text.tertiary}`}>
-                                AI Assistant
-                            </p>
-                        </div>
+                        {/* Theme toggle positioned absolutely on mobile */}
+                        <button
+                            onClick={toggleTheme}
+                            className={`absolute right-0 p-1.5 rounded-lg ${theme.bg.tertiary} ${theme.hover} transition-colors`}
+                        >
+                            {isDark ? (
+                                <Sun className={`w-4 h-4 ${theme.text.primary}`} />
+                            ) : (
+                                <Moon className={`w-4 h-4 ${theme.text.primary}`} />
+                            )}
+                        </button>
                     </div>
-                    <button
-                        onClick={toggleTheme}
-                        className={`p-2 rounded-lg ${theme.bg.tertiary} ${theme.hover} transition-colors`}
-                    >
-                        {isDark ? (
-                            <Sun className={`w-4 h-4 ${theme.text.primary}`} />
-                        ) : (
-                            <Moon className={`w-4 h-4 ${theme.text.primary}`} />
-                        )}
-                    </button>
+
+                    {/* Desktop Layout - Justified */}
+                    <div className="hidden sm:flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                            <div className={`${theme.accent.primary} p-2 rounded-lg`}>
+                                <Bot className={`h-5 w-5 ${theme.text.inverse}`} />
+                            </div>
+                            <div>
+                                <h1 className={`text-lg font-semibold ${theme.text.primary}`}>
+                                    VisionChat
+                                </h1>
+                                <p className={`text-xs ${theme.text.tertiary}`}>
+                                    AI Assistant
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={toggleTheme}
+                            className={`p-2 rounded-lg ${theme.bg.tertiary} ${theme.hover} transition-colors`}
+                        >
+                            {isDark ? (
+                                <Sun className={`w-4 h-4 ${theme.text.primary}`} />
+                            ) : (
+                                <Moon className={`w-4 h-4 ${theme.text.primary}`} />
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* Scrollable Messages Area */}
             <div className="flex-1 overflow-hidden">
-                <div className="h-full overflow-y-auto p-6">
-                    <div className="max-w-4xl mx-auto space-y-8">
+                <div className="h-full overflow-y-auto p-3 sm:p-6">
+                    <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
                         {messages.length === 0 && !isLoading ? (
-                            <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-8">
-                                <div className="space-y-6">
-                                    <div className={`${theme.accent.primary} p-4 rounded-2xl mx-auto w-fit`}>
-                                        <Bot className={`h-12 w-12 ${theme.text.inverse}`} />
+                            <div className="flex flex-col items-center justify-center h-full min-h-[300px] sm:min-h-[400px] text-center space-y-6 sm:space-y-8">
+                                <div className="space-y-4 sm:space-y-6">
+                                    <div className={`${theme.accent.primary} p-3 sm:p-4 rounded-2xl mx-auto w-fit`}>
+                                        <Bot className={`h-10 w-10 sm:h-12 sm:w-12 ${theme.text.inverse}`} />
                                     </div>
-                                    <div className="space-y-3">
-                                        <h2 className={`text-2xl font-bold ${theme.text.primary}`}>
+                                    <div className="space-y-2 sm:space-y-3 px-4">
+                                        <h2 className={`text-xl sm:text-2xl font-bold ${theme.text.primary}`}>
                                             Ready to help
                                         </h2>
-                                        <p className={`${theme.text.secondary} max-w-md mx-auto leading-relaxed`}>
+                                        <p className={`${theme.text.secondary} max-w-md mx-auto leading-relaxed text-sm sm:text-base`}>
                                             Start a conversation by typing a message or selecting a quick prompt below.
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Quick Prompts */}
-                                <div className="grid grid-cols-2 gap-3 max-w-lg w-full">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full px-4">
                                     {quickPrompts.map((prompt, index) => (
                                         <button
                                             key={index}
                                             onClick={() => setInputMessage(prompt.text)}
-                                            className={`p-4 ${theme.bg.secondary} ${theme.hover} border ${theme.border.primary} rounded-lg transition-all duration-200 text-left group hover:scale-[1.02]`}
+                                            className={`p-3 sm:p-4 ${theme.bg.secondary} ${theme.hover} border ${theme.border.primary} rounded-lg transition-all duration-200 text-left group hover:scale-[1.02] active:scale-[0.98]`}
                                         >
-                                            <div className="flex items-start space-x-3">
-                                                <prompt.icon className={`h-5 w-5 ${theme.text.primary} mt-0.5`} />
-                                                <div>
+                                            <div className="flex items-start space-x-2 sm:space-x-3">
+                                                <prompt.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${theme.text.primary} mt-0.5 flex-shrink-0`} />
+                                                <div className="min-w-0">
                                                     <h3 className={`${theme.text.primary} font-medium text-sm`}>
                                                         {prompt.text}
                                                     </h3>
-                                                    <p className={`${theme.text.tertiary} text-xs mt-1`}>
+                                                    <p className={`${theme.text.tertiary} text-xs mt-1 line-clamp-2`}>
                                                         {prompt.description}
                                                     </p>
                                                 </div>
@@ -918,20 +1009,30 @@ const Chatbot: React.FC<ChatbotProps> = ({ chatId: propChatId, initialMessage })
                                 {messages.map((message, index) => {
                                     const isRoleChange = index > 0 && messages[index - 1].role !== message.role;
                                     return (
-                                        <div key={message.id} className={`flex items-start space-x-4 ${isRoleChange ? 'mt-8' : 'mt-6'} ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                        <div key={message.id} className={`flex items-start space-x-2 sm:space-x-4 ${isRoleChange ? 'mt-6 sm:mt-8' : 'mt-4 sm:mt-6'} ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                             {message.role === 'assistant' && (
-                                                <div className="flex-shrink-0 mt-1">
+                                                <div className="flex-shrink-0 mt-1 hidden sm:block">
                                                     <div className={`${theme.accent.primary} p-2 rounded-lg`}>
                                                         <Bot className={`h-4 w-4 ${theme.text.inverse}`} />
                                                     </div>
                                                 </div>
                                             )}
 
-                                            <div className={`group max-w-3xl ${message.role === 'user' ? 'order-1' : 'order-2'}`}>
+                                            <div className={`group w-full sm:max-w-3xl ${message.role === 'user' ? 'order-1' : 'order-2'}`}>
                                                 <div className={`relative ${message.role === 'user'
-                                                    ? `${theme.accent.primary} ${theme.text.inverse} ml-auto`
-                                                    : `${theme.bg.secondary} ${theme.text.primary}`
-                                                    } rounded-xl px-4 py-3 shadow-sm border ${theme.border.primary} mb-4`}>
+                                                    ? `${theme.accent.primary} ${theme.text.inverse} ml-auto max-w-[85%] sm:max-w-fit`
+                                                    : `${theme.bg.secondary} ${theme.text.primary} max-w-full sm:max-w-[85%]`
+                                                    } rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm border ${theme.border.primary} mb-3 sm:mb-4`}>
+
+                                                    {/* Mobile: Show avatar inline for assistant messages */}
+                                                    {message.role === 'assistant' && (
+                                                        <div className="flex items-center space-x-2 mb-2 sm:hidden">
+                                                            <div className={`${theme.accent.primary} p-1.5 rounded-lg`}>
+                                                                <Bot className={`h-3 w-3 ${theme.text.inverse}`} />
+                                                            </div>
+                                                            <span className={`text-xs font-medium ${theme.text.secondary}`}>VisionChat</span>
+                                                        </div>
+                                                    )}
 
                                                     {message.role === 'user' ? (
                                                         <p className="leading-relaxed text-sm">{message.content}</p>
@@ -951,7 +1052,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ chatId: propChatId, initialMessage })
                                                         </div>
                                                     )}
 
-                                                    <div className={`flex items-center justify-between mt-3 pt-2 border-t ${theme.border.primary}`}>
+                                                    <div className={`flex items-center justify-between mt-2 sm:mt-3 pt-2 border-t ${theme.border.primary}`}>
                                                         <span className={`text-xs ${theme.text.tertiary}`}>
                                                             {formatTime(message.timestamp)}
                                                         </span>
@@ -960,7 +1061,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ chatId: propChatId, initialMessage })
                                             </div>
 
                                             {message.role === 'user' && (
-                                                <div className="flex-shrink-0 mt-1 order-2">
+                                                <div className="flex-shrink-0 mt-1 order-2 hidden sm:block">
                                                     <div className={`w-8 h-8 ${theme.accent.primary} rounded-lg flex items-center justify-center`}>
                                                         <User className={`h-4 w-4 ${theme.text.inverse}`} />
                                                     </div>
@@ -971,8 +1072,8 @@ const Chatbot: React.FC<ChatbotProps> = ({ chatId: propChatId, initialMessage })
                                 })}
 
                                 {error && (
-                                    <div className={`${theme.bg.secondary} border border-red-500/20 rounded-lg p-4 flex items-center space-x-3`}>
-                                        <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                                    <div className={`${theme.bg.secondary} border border-red-500/20 rounded-lg p-3 sm:p-4 flex items-center space-x-3`}>
+                                        <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0" />
                                         <div>
                                             <p className="text-red-500 font-medium text-sm">Error</p>
                                             <p className={`${theme.text.secondary} text-sm`}>{error}</p>
@@ -987,10 +1088,10 @@ const Chatbot: React.FC<ChatbotProps> = ({ chatId: propChatId, initialMessage })
             </div>
 
             {/* Fixed Input Area */}
-            <div className={`flex-shrink-0 ${theme.bg.secondary} border-t ${theme.border.primary} p-4`}>
+            <div className={`flex-shrink-0 ${theme.bg.secondary} border-t ${theme.border.primary} p-3 sm:p-4`}>
                 <div className="max-w-4xl mx-auto">
-                    <div className={`relative ${theme.bg.primary} border ${theme.border.primary} rounded-xl p-4 shadow-sm`}>
-                        <div className="flex items-end space-x-3">
+                    <div className={`relative ${theme.bg.primary} border ${theme.border.primary} rounded-xl p-3 sm:p-4 shadow-sm`}>
+                        <div className="flex items-end space-x-2 sm:space-x-3">
                             <div className="flex-1">
                                 <input
                                     ref={inputRef}
@@ -1006,7 +1107,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ chatId: propChatId, initialMessage })
                             <button
                                 onClick={sendMessage}
                                 disabled={!inputMessage.trim() || isLoading}
-                                className={`${theme.accent.primary} ${theme.text.inverse} p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 disabled:hover:scale-100 shadow-sm`}
+                                className={`${theme.accent.primary} ${theme.text.inverse} p-2 sm:p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 disabled:hover:scale-100 active:scale-95 shadow-sm`}
                             >
                                 {isLoading ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -1015,13 +1116,16 @@ const Chatbot: React.FC<ChatbotProps> = ({ chatId: propChatId, initialMessage })
                                 )}
                             </button>
                         </div>
-                        <div className="flex justify-between items-center mt-3 text-xs">
-                            <span className={theme.text.tertiary}>
+                        <div className="flex justify-between items-center mt-2 sm:mt-3 text-xs">
+                            <span className={`${theme.text.tertiary} hidden sm:inline`}>
                                 Press <kbd className={`px-1.5 py-0.5 ${theme.bg.tertiary} rounded text-xs`}>Enter</kbd> to send
+                            </span>
+                            <span className={`${theme.text.tertiary} sm:hidden text-xs`}>
+                                Tap send to reply
                             </span>
                             <button
                                 onClick={clearChat}
-                                className={`${theme.text.tertiary} ${theme.hover} px-2 py-1 rounded transition-colors`}
+                                className={`${theme.text.tertiary} ${theme.hover} px-2 py-1 rounded transition-colors text-xs`}
                             >
                                 Clear
                             </button>

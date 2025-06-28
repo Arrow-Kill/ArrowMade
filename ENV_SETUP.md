@@ -8,11 +8,11 @@ MONGO_URI=mongodb://localhost:27017/visionchat
 # OR for MongoDB Atlas:
 # MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/visionchat
 
-# OpenRouter API Key (for chat functionality)
-NEXT_PUBLIC_DEEP_AI_KEY=your_openrouter_api_key_here
-
 # Google OAuth Client ID (only Client ID needed with @react-oauth/google)
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id_here
+
+# Bing Web Search API Key
+BING_SUBSCRIPTION_KEY=your_bing_api_key_here
 
 # JWT Secret for token signing (generate a random string)
 JWT_SECRET=your_jwt_secret_key_here
@@ -40,24 +40,24 @@ NEXT_PUBLIC_PASS=your_gmail_app_password_here
 6. Add authorized origins: `http://localhost:3000` (and your production domain)
 7. Copy the Client ID to `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
 
-### 3. JWT Secret
+### 3. Bing Web Search API Setup
+1. Go to [Microsoft Azure Portal](https://portal.azure.com/)
+2. Create a free account if you don't have one
+3. Create a new Bing Search resource
+4. Choose the F1 free tier (free - 3 transactions per second, 1000 transactions per month)
+5. After creation, go to "Keys and Endpoint"
+6. Copy either Key 1 or Key 2 to `BING_SUBSCRIPTION_KEY`
+
+### 4. JWT Secret
 Generate a secure random string for JWT_SECRET:
 ```bash
 # You can use this command to generate a random string:
 openssl rand -base64 32
 ```
 
-### 4. OpenRouter API Key
-You should already have this from your previous setup.
-
 ### 5. Email Configuration (for Email Verification)
 1. Use a Gmail account for sending verification emails
 2. Enable 2-Factor Authentication on your Gmail account
-3. Generate an App Password:
-   - Go to Google Account settings → Security → 2-Step Verification → App passwords
-   - Generate a new app password for "Mail"
-   - Use this app password (not your regular Gmail password) for `NEXT_PUBLIC_PASS`
-4. Set `NEXT_PUBLIC_EMAIL` to your Gmail address
 
 ## Database Collections
 The system automatically creates two separate collections:

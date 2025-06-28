@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import connectDB from './db/mongodb';
 import { getTokenFromRequest, verifyToken } from './jwt';
 import GoogleUser from './models/GoogleUser';
 import User from './models/User';
-import connectDB from './mongodb';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: {

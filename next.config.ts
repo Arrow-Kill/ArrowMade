@@ -1,6 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Enable Fast Refresh
+  webpackDevMiddleware: (config: any) => {
+    config.watchOptions = {
+      poll: 1000,
+      aggregateTimeout: 300,
+    }
+    return config
+  },
+  // Optimize development experience
+  swcMinify: true,
+  compiler: {
+    // Enables the styled-components SWC transform if you're using styled-components
+    styledComponents: true
+  },
   images: {
     remotePatterns: [
       {

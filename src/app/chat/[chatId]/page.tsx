@@ -25,6 +25,7 @@ function ChatPageContent() {
     const [chats, setChats] = useState<ChatItem[]>([]);
     const [loadingChats, setLoadingChats] = useState(true);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -94,11 +95,39 @@ function ChatPageContent() {
 
     return (
         <div className={`h-screen ${theme.bg.primary} flex relative`}>
+            {/* Mobile Overlay */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
             {/* Fixed Sidebar */}
-            <div className={`${isSidebarCollapsed ? 'w-16' : 'w-80'} flex-shrink-0 ${theme.bg.secondary} border-r ${theme.border.primary} flex flex-col transition-all duration-300 ease-in-out`}>
+            <div className={`${
+                // Desktop behavior
+                isSidebarCollapsed ? 'w-16' : 'w-80'
+                } ${
+                // Mobile behavior
+                isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+                } lg:translate-x-0 fixed lg:relative h-full z-50 lg:z-auto flex-shrink-0 ${theme.bg.secondary} border-r ${theme.border.primary} flex flex-col transition-all duration-300 ease-in-out`}>
                 {/* Header */}
                 <div className={`flex-shrink-0 p-3 border-b ${theme.border.primary}`}>
-                    <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} mb-4`}>
+                    {/* Mobile: Close button */}
+                    <div className="flex items-center justify-between mb-3 lg:hidden">
+                        <h1 className={`text-lg font-bold ${theme.text.primary}`}>
+                            VisionChat
+                        </h1>
+                        <button
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={`p-2 rounded-lg ${theme.bg.tertiary} ${theme.hover} transition-colors`}
+                        >
+                            <ChevronLeft className={`w-4 h-4 ${theme.text.primary}`} />
+                        </button>
+                    </div>
+
+                    {/* Desktop: Theme toggle and title */}
+                    <div className={`hidden lg:flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} mb-4`}>
                         {!isSidebarCollapsed && (
                             <h1 className={`text-xl font-bold ${theme.text.primary}`}>
                                 VisionChat
@@ -117,20 +146,23 @@ function ChatPageContent() {
                     </div>
 
                     {/* New Chat Button */}
-                    {!isSidebarCollapsed && (
+                    {(!isSidebarCollapsed || isMobileMenuOpen) && (
                         <button
-                            onClick={createNewChat}
-                            className={`w-full flex items-center gap-3 px-4 py-3 ${theme.accent.primary} ${theme.text.inverse} font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] shadow-sm`}
+                            onClick={() => {
+                                createNewChat();
+                                setIsMobileMenuOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-3 px-4 py-3 ${theme.accent.primary} ${theme.text.inverse} font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm`}
                         >
                             <Plus className="w-4 h-4" />
                             New Chat
                         </button>
                     )}
 
-                    {isSidebarCollapsed && (
+                    {isSidebarCollapsed && !isMobileMenuOpen && (
                         <button
                             onClick={createNewChat}
-                            className={`w-full flex items-center justify-center p-3 ${theme.accent.primary} ${theme.text.inverse} font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] shadow-sm`}
+                            className={`w-full flex items-center justify-center p-3 ${theme.accent.primary} ${theme.text.inverse} font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm`}
                             title="New Chat"
                         >
                             <Edit3 className="w-4 h-4" />
@@ -140,14 +172,14 @@ function ChatPageContent() {
 
                 {/* Chat List - Scrollable */}
                 <div className="flex-1 overflow-y-auto p-4">
-                    {!isSidebarCollapsed && (
+                    {(!isSidebarCollapsed || isMobileMenuOpen) && (
                         <h2 className={`text-sm font-medium ${theme.text.tertiary} mb-4 uppercase tracking-wide`}>
                             Recent Conversations
                         </h2>
                     )}
                     {loadingChats ? (
                         <div className={`text-center ${theme.text.tertiary} py-8`}>
-                            {!isSidebarCollapsed ? (
+                            {(!isSidebarCollapsed || isMobileMenuOpen) ? (
                                 <div className="animate-pulse space-y-2">
                                     <div className={`h-3 ${theme.bg.tertiary} rounded w-3/4`}></div>
                                     <div className={`h-3 ${theme.bg.tertiary} rounded w-1/2`}></div>
@@ -161,7 +193,7 @@ function ChatPageContent() {
                         </div>
                     ) : chats.length === 0 ? (
                         <div className={`text-center ${theme.text.tertiary} py-8`}>
-                            {!isSidebarCollapsed ? (
+                            {(!isSidebarCollapsed || isMobileMenuOpen) ? (
                                 <>
                                     <p className="text-sm">No conversations yet</p>
                                     <p className="text-xs mt-1">Start a new chat to begin</p>
@@ -175,14 +207,17 @@ function ChatPageContent() {
                             {chats.map((chat) => (
                                 <button
                                     key={chat.chatId}
-                                    onClick={() => router.push(`/chat/${chat.chatId}`)}
+                                    onClick={() => {
+                                        router.push(`/chat/${chat.chatId}`);
+                                        setIsMobileMenuOpen(false);
+                                    }}
                                     className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${theme.hover} border ${chat.chatId === chatId
                                         ? `${theme.border.focus} ${theme.bg.active}`
                                         : `${theme.border.primary} ${theme.bg.tertiary}`
-                                        } ${isSidebarCollapsed ? 'justify-center' : ''}`}
-                                    title={isSidebarCollapsed ? chat.title : ''}
+                                        } ${(isSidebarCollapsed && !isMobileMenuOpen) ? 'justify-center' : ''} active:scale-[0.98]`}
+                                    title={(isSidebarCollapsed && !isMobileMenuOpen) ? chat.title : ''}
                                 >
-                                    {isSidebarCollapsed ? (
+                                    {(isSidebarCollapsed && !isMobileMenuOpen) ? (
                                         <div className="flex justify-center">
                                             <MessageSquare className={`w-4 h-4 ${chat.chatId === chatId ? theme.text.primary : theme.text.tertiary}`} />
                                         </div>
@@ -212,7 +247,7 @@ function ChatPageContent() {
 
                 {/* User Info - Fixed at bottom */}
                 <div className={`flex-shrink-0 p-2 border-t ${theme.border.primary}`}>
-                    {!isSidebarCollapsed ? (
+                    {(!isSidebarCollapsed || isMobileMenuOpen) ? (
                         <>
                             <div className={`flex items-center gap-3 ${theme.text.primary} mb-3 p-3 rounded-lg ${theme.bg.tertiary}`}>
                                 {user.avatar ? (
@@ -232,9 +267,20 @@ function ChatPageContent() {
                                 </div>
                             </div>
 
+                            {/* Mobile: Theme toggle */}
+                            <div className="lg:hidden mb-2">
+                                <button
+                                    onClick={toggleTheme}
+                                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm ${theme.text.secondary} ${theme.hover} rounded-lg transition-all duration-200 border ${theme.border.primary}`}
+                                >
+                                    {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                                    {isDark ? 'Light Mode' : 'Dark Mode'}
+                                </button>
+                            </div>
+
                             <button
                                 onClick={handleLogout}
-                                className={`w-full flex items-center gap-2 px-3 py-2 text-sm ${theme.text.secondary} ${theme.hover} rounded-lg transition-all duration-200 border ${theme.border.primary}`}
+                                className={`w-full flex items-center gap-2 px-3 py-2 text-sm ${theme.text.secondary} ${theme.hover} rounded-lg transition-all duration-200 border ${theme.border.primary} active:scale-[0.98]`}
                             >
                                 <LogOut className="w-4 h-4" />
                                 Sign Out
@@ -259,10 +305,18 @@ function ChatPageContent() {
                 </div>
             </div>
 
-            {/* Sidebar Toggle Button */}
+            {/* Mobile: Menu button */}
+            <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className={`fixed top-3 left-4 z-30 lg:hidden ${theme.bg.secondary} ${theme.hover} border ${theme.border.primary} rounded-lg p-2 shadow-lg transition-all  duration-200 active:scale-95`}
+            >
+                <ChevronRight className={`w-4 h-4 ${theme.text.primary}`} />
+            </button>
+
+            {/* Desktop: Sidebar Toggle Button */}
             <button
                 onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                className={`absolute top-1/2 -translate-y-1/2 z-10 ${theme.bg.secondary} ${theme.hover} border ${theme.border.primary} rounded-full p-2 shadow-lg transition-all duration-300 ease-in-out`}
+                className={`hidden lg:block absolute top-1/2 -translate-y-1/2 z-10 ${theme.bg.secondary} ${theme.hover} border ${theme.border.primary} rounded-full p-2 shadow-lg transition-all duration-300 ease-in-out active:scale-95`}
                 style={{ left: isSidebarCollapsed ? '3.5rem' : '19rem' }}
             >
                 {isSidebarCollapsed ? (
@@ -273,7 +327,7 @@ function ChatPageContent() {
             </button>
 
             {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden lg:ml-0" style={{ marginLeft: isMobileMenuOpen ? '0' : '0' }}>
                 <Chatbot chatId={chatId} initialMessage={initialMessage} />
             </div>
         </div>

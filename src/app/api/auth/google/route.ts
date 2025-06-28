@@ -1,6 +1,6 @@
+import connectDB from '@/lib/db/mongodb';
 import { signToken } from '@/lib/jwt';
 import GoogleUser from '@/lib/models/GoogleUser';
-import connectDB from '@/lib/mongodb';
 import { OAuth2Client } from 'google-auth-library';
 import { NextRequest, NextResponse } from 'next/server';
 

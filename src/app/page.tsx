@@ -18,12 +18,13 @@ function HomeContent() {
     }
   }, [user, isLoading, router]);
 
-  // Show loading while checking authentication
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
-        <p className="text-white text-lg">Loading VisionChat AI...</p>
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="relative">
+        {/* Outer ring */}
+        <div className="w-12 h-12 border-2 border-gray-600 rounded-full"></div>
+        {/* Inner loading circle */}
+        <div className="absolute top-0 left-0 w-12 h-12 border-2 border-t-white rounded-full animate-smooth-spin"></div>
       </div>
     </div>
   );
