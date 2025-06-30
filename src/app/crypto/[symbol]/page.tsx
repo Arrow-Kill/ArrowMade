@@ -145,7 +145,7 @@ export default function CryptoDetailPage() {
                     <CryptoDetailHeader
                         theme={theme}
                         themeClasses={themeClasses}
-                        data={cryptoData}
+                        data={{ ...cryptoData, fallbackImage: 'default-image-url' }}
                     />
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">

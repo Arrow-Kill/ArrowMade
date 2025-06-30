@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
 const BINANCE_API_KEY = process.env.NEXT_PUBLIC_BINANCE_API;
 const BINANCE_SECRET_KEY = process.env.NEXT_PUBLIC_BINANCE_SERCET_KEY;
@@ -78,12 +78,13 @@ const COIN_IDS: { [key: string]: string } = {
 };
 
 export async function GET(
-    request: Request,
-    { params }: { params: { symbol: string } }
-) {
+    request: NextRequest,
+    { params }: { params: Promise<{ symbol: string }> }
+): Promise<NextResponse> {
     try {
         // Validate the symbol parameter
-        if (!params?.symbol) {
+        const { symbol } = await params;
+        if (!symbol) {
             return NextResponse.json(
                 { error: 'Symbol parameter is required' },
                 { status: 400 }
@@ -91,7 +92,7 @@ export async function GET(
         }
 
         // Fetch data from Binance
-        const binanceData = await fetchBinanceData(params.symbol);
+        const binanceData = await fetchBinanceData(symbol);
         const { baseSymbol, tradingPair } = binanceData;
 
         // Get the coin's CoinGecko ID if available
