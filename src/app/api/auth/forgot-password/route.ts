@@ -1,5 +1,5 @@
 import connectDB from '@/lib/db/mongodb';
-import { createPasswordResetUrl, generateVerificationToken, sendPasswordResetEmail } from '@/lib/email-service';
+import { createPasswordResetUrl, generateVerificationToken, sendPasswordResetEmail } from '@/lib/EmailService/email-service';
 import User from '@/lib/models/User';
 import { NextRequest, NextResponse } from 'next/server';
 

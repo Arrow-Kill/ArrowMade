@@ -1,5 +1,5 @@
 import connectDB from '@/lib/db/mongodb';
-import { signToken } from '@/lib/jwt';
+import { signToken } from '@/lib/JwtDecoder/jwt';
 import User from '@/lib/models/User';
 import { NextRequest, NextResponse } from 'next/server';
 

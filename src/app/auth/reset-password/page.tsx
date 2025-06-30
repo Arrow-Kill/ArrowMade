@@ -1,6 +1,6 @@
 'use client';
 
-import { ThemeProvider, useTheme } from '@/lib/theme-context';
+import { ThemeProvider, useTheme } from '@/lib/Theme/theme-context';
 import { AlertCircle, CheckCircle, Eye, EyeOff, Loader2, Lock } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';

@@ -1,7 +1,7 @@
 'use client';
 
-import { useAuth } from '@/lib/auth-context';
-import { useTheme } from '@/lib/theme-context';
+import { useAuth } from '@/lib/AuthContext/auth-context';
+import { useTheme } from '@/lib/Theme/theme-context';
 import {
     AlertCircle,
     Bot,

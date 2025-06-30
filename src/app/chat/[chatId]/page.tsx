@@ -1,8 +1,8 @@
 'use client';
 
 import Chatbot from '@/components/NewPage/Chatbot';
-import { AuthProvider, useAuth } from '@/lib/auth-context';
-import { useTheme } from '@/lib/theme-context';
+import { AuthProvider, useAuth } from '@/lib/AuthContext/auth-context';
+import { useTheme } from '@/lib/Theme/theme-context';
 import { ChevronLeft, ChevronRight, Edit3, LogOut, MessageSquare, Moon, Plus, Sun, User } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';

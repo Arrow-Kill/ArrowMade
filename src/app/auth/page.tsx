@@ -2,8 +2,8 @@
 
 import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
-import { AuthProvider, useAuth } from '@/lib/auth-context';
-import { ThemeProvider } from '@/lib/theme-context';
+import { AuthProvider, useAuth } from '@/lib/AuthContext/auth-context';
+import { ThemeProvider } from '@/lib/Theme/theme-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 

@@ -1,5 +1,5 @@
 import connectDB from '@/lib/db/mongodb';
-import { getTokenFromRequest, verifyToken } from '@/lib/jwt';
+import { getTokenFromRequest, verifyToken } from '@/lib/JwtDecoder/jwt';
 import GoogleUser from '@/lib/models/GoogleUser';
 import User from '@/lib/models/User';
 import { NextRequest, NextResponse } from 'next/server';

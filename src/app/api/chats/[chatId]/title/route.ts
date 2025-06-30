@@ -1,6 +1,6 @@
-import { AuthenticatedRequest, withAuth } from '@/lib/auth-middleware';
-import connectDB from '@/lib/db/mongodb';
-import Chat from '@/lib/models/Chat';
+import { AuthenticatedRequest, withAuth } from '../../../../../lib/Middleware/auth-middleware';
+import connectDB from '../../../../../lib/db/mongodb';
+import Chat from '../../../../../lib/models/Chat';
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
