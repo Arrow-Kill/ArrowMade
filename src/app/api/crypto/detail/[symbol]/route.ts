@@ -3,12 +3,32 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 const BINANCE_API_KEY = process.env.NEXT_PUBLIC_BINANCE_API;
 const BINANCE_SECRET_KEY = process.env.NEXT_PUBLIC_BINANCE_SERCET_KEY;
+const COINGECKO_API_BASE = 'https://api.coingecko.com/api/v3';
 
 async function getSignature(queryString: string): Promise<string> {
     return crypto
         .createHmac('sha256', BINANCE_SECRET_KEY!)
         .update(queryString)
         .digest('hex');
+}
+
+async function fetchCoinGeckoData(coinId: string) {
+    try {
+        const response = await fetch(`${COINGECKO_API_BASE}/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`);
+        if (!response.ok) {
+            console.warn(`Failed to fetch CoinGecko data for ${coinId}`);
+            return null;
+        }
+        const data = await response.json();
+        return {
+            circulatingSupply: data.market_data?.circulating_supply || 0,
+            totalSupply: data.market_data?.total_supply || 0,
+            maxSupply: data.market_data?.max_supply || 0
+        };
+    } catch (error) {
+        console.error('Error fetching from CoinGecko:', error);
+        return null;
+    }
 }
 
 async function fetchBinanceData(symbol: string) {
@@ -97,6 +117,9 @@ export async function GET(
 
         // Get the coin's CoinGecko ID if available
         const coinId = COIN_IDS[baseSymbol] || baseSymbol.toLowerCase();
+        
+        // Fetch supply data from CoinGecko
+        const geckoData = await fetchCoinGeckoData(coinId);
 
         // Format the data
         const formattedData = {
@@ -108,9 +131,9 @@ export async function GET(
             priceChangePercent24h: parseFloat(binanceData.ticker.priceChangePercent) || 0,
             marketCap: parseFloat(binanceData.ticker.quoteVolume) || 0,
             volume24h: parseFloat(binanceData.ticker.volume) || 0,
-            circulatingSupply: 0,
-            totalSupply: 0,
-            maxSupply: 0,
+            circulatingSupply: geckoData?.circulatingSupply || 0,
+            totalSupply: geckoData?.totalSupply || 0,
+            maxSupply: geckoData?.maxSupply || 0,
             rank: 1,
             high24h: parseFloat(binanceData.ticker.highPrice) || 0,
             low24h: parseFloat(binanceData.ticker.lowPrice) || 0,

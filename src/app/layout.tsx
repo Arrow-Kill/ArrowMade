@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "VisionChat AI - AI Chatbot & Computer Vision",
-  description: "Advanced AI chatbot with computer vision capabilities",
+  title: "NeuroCap",
+  description: "NeuroCap an AI-powered Crypto Analytics Platform",
 };
 
 export default function RootLayout({

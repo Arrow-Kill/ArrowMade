@@ -1,4 +1,4 @@
-# 🚀 VisionChat AI
+# 🚀 NeuroCap
 
 A modern, full-stack AI chat application built with Next.js 15, featuring advanced authentication, real-time conversations, and a beautiful responsive UI.
 

@@ -53,15 +53,15 @@ export default function CryptoDetailPage() {
     const [error, setError] = useState<string | null>(null);
 
     const themeClasses = {
-        background: theme === 'dark' ? 'bg-gray-900' : 'bg-white',
-        text: theme === 'dark' ? 'text-white' : 'text-gray-900',
-        card: theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100',
-        cardHover: theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-200',
-        border: theme === 'dark' ? 'border-gray-700' : 'border-gray-200',
-        button: theme === 'dark' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-500 hover:bg-indigo-600',
-        buttonText: 'text-white',
-        input: theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300',
-        secondaryText: theme === 'dark' ? 'text-gray-400' : 'text-gray-600',
+        background: 'bg-black',
+        text: 'text-white',
+        card: 'bg-zinc-900',
+        cardHover: 'hover:bg-zinc-800',
+        border: 'border-zinc-800',
+        button: 'bg-white text-black hover:bg-zinc-200',
+        buttonText: 'text-black',
+        input: 'bg-zinc-900 border-zinc-800',
+        secondaryText: 'text-zinc-400',
     };
 
     useEffect(() => {
@@ -107,7 +107,7 @@ export default function CryptoDetailPage() {
             <div className={`min-h-screen ${themeClasses.background} ${themeClasses.text}`}>
                 <TopNavBar theme={theme} themeClasses={themeClasses} />
                 <div className="pt-16 flex items-center justify-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
                 </div>
             </div>
         );
@@ -118,15 +118,15 @@ export default function CryptoDetailPage() {
             <div className={`min-h-screen ${themeClasses.background} ${themeClasses.text}`}>
                 <TopNavBar theme={theme} themeClasses={themeClasses} />
                 <div className="pt-16 flex flex-col items-center justify-center min-h-screen">
-                    <div className={`${themeClasses.card} rounded-lg p-8 max-w-md mx-auto text-center`}>
-                        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                        <h2 className="text-xl font-bold mb-2">Error Loading Data</h2>
+                    <div className={`${themeClasses.card} rounded-xl border ${themeClasses.border} p-8 max-w-md mx-auto text-center`}>
+                        <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                        <h2 className="text-xl font-medium mb-2">Error Loading Data</h2>
                         <p className={`${themeClasses.secondaryText} mb-6`}>
                             {error || `Could not find data for ${Array.isArray(params?.symbol) ? params.symbol[0] : params?.symbol}`}
                         </p>
                         <button
                             onClick={() => router.back()}
-                            className={`${themeClasses.button} ${themeClasses.buttonText} px-6 py-2 rounded-lg`}
+                            className="bg-white text-black font-medium px-6 py-2.5 rounded-lg hover:bg-zinc-200 transition-colors duration-200"
                         >
                             Go Back
                         </button>
@@ -141,15 +141,15 @@ export default function CryptoDetailPage() {
             <TopNavBar theme={theme} themeClasses={themeClasses} />
 
             <div className="pt-16 w-full overflow-x-hidden">
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+                <main className="max-w-[90rem] mx-auto px-4 sm:px-6 py-8">
                     <CryptoDetailHeader
                         theme={theme}
                         themeClasses={themeClasses}
                         data={{ ...cryptoData, fallbackImage: 'default-image-url' }}
                     />
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                        <div className="lg:col-span-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+                        <div className="lg:col-span-2 h-full">
                             <CryptoPriceChart
                                 theme={theme}
                                 themeClasses={themeClasses}
@@ -157,18 +157,22 @@ export default function CryptoDetailPage() {
                             />
                         </div>
 
-                        <div className="space-y-6">
-                            <CryptoStats
-                                theme={theme}
-                                themeClasses={themeClasses}
-                                data={cryptoData}
-                            />
+                        <div className="space-y-6 h-full flex flex-col">
+                            <div className="flex-1">
+                                <CryptoStats
+                                    theme={theme}
+                                    themeClasses={themeClasses}
+                                    data={cryptoData}
+                                />
+                            </div>
 
-                            <CryptoSentiment
-                                theme={theme}
-                                themeClasses={themeClasses}
-                                sentiment={cryptoData.sentiment}
-                            />
+                            <div>
+                                <CryptoSentiment
+                                    theme={theme}
+                                    themeClasses={themeClasses}
+                                    symbol={cryptoData.symbol}
+                                />
+                            </div>
                         </div>
                     </div>
                 </main>

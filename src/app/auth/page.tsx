@@ -13,11 +13,10 @@ function AuthPageContent() {
   const router = useRouter();
 
   useEffect(() => {
-
-    if (user) {
-      router.push('/chat');
+    if (!isLoading && user) {
+      router.push('/');
     }
-  }, [user, router]);
+  }, [user, isLoading, router]);
 
   if (isLoading) {
     return (

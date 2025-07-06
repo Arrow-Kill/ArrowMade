@@ -1,7 +1,7 @@
 import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface CryptoDetailHeaderProps {
     theme: 'dark' | 'light';
@@ -29,7 +29,28 @@ interface CryptoDetailHeaderProps {
 
 export default function CryptoDetailHeader({ theme, themeClasses, data }: CryptoDetailHeaderProps) {
     const router = useRouter();
-    const [imgSrc, setImgSrc] = useState(data.image);
+    const [imgSrc, setImgSrc] = useState<string>('/placeholder.png'); // Default to placeholder
+
+    useEffect(() => {
+        // Validate URL when component mounts or when data.image changes
+        const validateAndSetImage = () => {
+            try {
+                // Check if it's a valid URL
+                new URL(data.image);
+                setImgSrc(data.image);
+            } catch (e) {
+                // If invalid URL, try fallback or default to placeholder
+                try {
+                    new URL(data.fallbackImage);
+                    setImgSrc(data.fallbackImage);
+                } catch {
+                    setImgSrc('/placeholder.png');
+                }
+            }
+        };
+
+        validateAndSetImage();
+    }, [data.image, data.fallbackImage]);
 
     const formatPrice = (price: number): string => {
         if (price < 1) {
@@ -43,8 +64,7 @@ export default function CryptoDetailHeader({ theme, themeClasses, data }: Crypto
     };
 
     const handleImageError = () => {
-        // Try the fallback image if available, otherwise use a default placeholder
-        setImgSrc(data.fallbackImage || '/placeholder.png');
+        setImgSrc('/placeholder.png');
     };
 
     return (
