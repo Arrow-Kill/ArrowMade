@@ -1,6 +1,6 @@
-import { AuthenticatedRequest, withAuth } from '@/lib/auth-middleware';
+import { AuthenticatedRequest, withAuth } from '@/lib/Middleware/auth-middleware';
+import connectDB from '@/lib/db/mongodb';
 import Chat from '@/lib/models/Chat';
-import connectDB from '@/lib/mongodb';
 import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       .limit(50); // Limit to 50 most recent chats
 
       return NextResponse.json({
-        chats: chats.map(chat => ({
+        chats: chats.map((chat: any) => ({
           chatId: chat.chatId,
           title: chat.title,
           createdAt: chat.createdAt,

@@ -1,7 +1,7 @@
 'use client';
 
-import { useAuth } from '@/lib/auth-context';
-import { useTheme } from '@/lib/theme-context';
+import { useAuth } from '@/lib/AuthContext/auth-context';
+import { useTheme } from '@/lib/Theme/theme-context';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import React, { useState } from 'react';

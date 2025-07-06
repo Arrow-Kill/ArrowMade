@@ -1,7 +1,7 @@
 'use client';
 
-import { AuthProvider, useAuth } from '@/lib/auth-context';
-import { useTheme } from '@/lib/theme-context';
+import { AuthProvider, useAuth } from '@/lib/AuthContext/auth-context';
+import { useTheme } from '@/lib/Theme/theme-context';
 import { Bot, ChevronLeft, ChevronRight, Edit3, LogOut, MessageSquare, Moon, Plus, Send, Sun, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -144,7 +144,7 @@ function ChatPageContent() {
     return (
         <div className={`h-screen ${theme.bg.primary} flex relative`}>
             {/* Fixed Sidebar */}
-            <div className={`${isSidebarCollapsed ? 'w-16' : 'w-80'} flex-shrink-0 ${theme.bg.secondary} border-r ${theme.border.primary} flex flex-col transition-all duration-300 ease-in-out`}>
+            <div className={`${isSidebarCollapsed ? 'w-16' : 'w-80'} flex-shrink-0 ${theme.bg.secondary} border-r ${theme.border.primary} flex flex-col transition-all duration-300 ease-in-out hidden lg:flex`}>
                 {/* Header */}
                 <div className={`flex-shrink-0 p-3 border-b ${theme.border.primary}`}>
                     <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} mb-4`}>
@@ -169,7 +169,7 @@ function ChatPageContent() {
                     {!isSidebarCollapsed && (
                         <button
                             onClick={createNewChat}
-                            className={`w-full flex items-center gap-3 px-4 py-3 ${theme.accent.primary} ${theme.text.inverse} font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] shadow-sm`}
+                            className={`w-full flex items-center gap-3 px-4 py-3 ${theme.accent.primary} ${theme.text.inverse} font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm`}
                         >
                             <Plus className="w-4 h-4" />
                             New Chat
@@ -179,7 +179,7 @@ function ChatPageContent() {
                     {isSidebarCollapsed && (
                         <button
                             onClick={createNewChat}
-                            className={`w-full flex items-center justify-center p-3 ${theme.accent.primary} ${theme.text.inverse} font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] shadow-sm`}
+                            className={`w-full flex items-center justify-center p-3 ${theme.accent.primary} ${theme.text.inverse} font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm`}
                             title="New Chat"
                         >
                             <Edit3 className="w-4 h-4" />
@@ -225,7 +225,7 @@ function ChatPageContent() {
                                 <button
                                     key={chat.chatId}
                                     onClick={() => router.push(`/chat/${chat.chatId}`)}
-                                    className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${theme.hover} ${theme.bg.tertiary} border ${theme.border.primary} ${isSidebarCollapsed ? 'justify-center' : ''}`}
+                                    className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${theme.hover} ${theme.bg.tertiary} border ${theme.border.primary} ${isSidebarCollapsed ? 'justify-center' : ''} active:scale-[0.98]`}
                                     title={isSidebarCollapsed ? chat.title : ''}
                                 >
                                     {isSidebarCollapsed ? (
@@ -280,7 +280,7 @@ function ChatPageContent() {
 
                             <button
                                 onClick={handleLogout}
-                                className={`w-full flex items-center gap-2 px-3 py-2 text-sm ${theme.text.secondary} ${theme.hover} rounded-lg transition-all duration-200 border ${theme.border.primary}`}
+                                className={`w-full flex items-center gap-2 px-3 py-2 text-sm ${theme.text.secondary} ${theme.hover} rounded-lg transition-all duration-200 border ${theme.border.primary} active:scale-[0.98]`}
                             >
                                 <LogOut className="w-4 h-4" />
                                 Sign Out
@@ -305,10 +305,10 @@ function ChatPageContent() {
                 </div>
             </div>
 
-            {/* Sidebar Toggle Button */}
+            {/* Desktop: Sidebar Toggle Button */}
             <button
                 onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                className={`absolute top-1/2 -translate-y-1/2 ${isSidebarCollapsed ? 'left-14' : 'left-78'} z-10 ${theme.bg.secondary} ${theme.hover} border ${theme.border.primary} rounded-full p-2 shadow-lg transition-all duration-300 ease-in-out`}
+                className={`hidden lg:block absolute top-1/2 -translate-y-1/2 z-10 ${theme.bg.secondary} ${theme.hover} border ${theme.border.primary} rounded-full p-2 shadow-lg mb-5 transition-all duration-300 ease-in-out active:scale-95`}
                 style={{ left: isSidebarCollapsed ? '3.5rem' : '19rem' }}
             >
                 {isSidebarCollapsed ? (
@@ -318,76 +318,157 @@ function ChatPageContent() {
                 )}
             </button>
 
-            {/* Main Chat Area - Centered Input */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 flex items-center justify-center p-8">
-                    <div className="max-w-4xl w-full space-y-12">
-                        {/* Welcome Header */}
-                        <div className="text-center space-y-6">
-                            <div className={`inline-flex items-center justify-center w-16 h-16 ${theme.accent.primary} rounded-2xl mb-6`}>
-                                <Bot className={`w-8 h-8 ${theme.text.inverse}`} />
-                            </div>
-                            <div>
-                                <h1 className={`text-4xl font-bold ${theme.text.primary} mb-3`}>
-                                    How can I assist you today?
-                                </h1>
-                                <p className={`text-xl ${theme.text.secondary} max-w-2xl mx-auto leading-relaxed`}>
-                                    I'm here to help with analysis, problem-solving, writing, coding, and strategic thinking.
-                                </p>
-                            </div>
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col items-center justify-center min-h-screen p-4 lg:p-8">
+                <div className="w-full max-w-2xl space-y-6 sm:space-y-8">
+                    {/* Mobile Header */}
+                    <div className="lg:hidden text-center space-y-3 mb-8">
+                        <div className={`${theme.accent.primary} p-3 rounded-2xl mx-auto w-fit`}>
+                            <Bot className={`h-10 w-10 ${theme.text.inverse}`} />
+                        </div>
+                        <div>
+                            <h1 className={`text-2xl font-bold ${theme.text.primary}`}>
+                                VisionChat
+                            </h1>
+                            <p className={`text-sm ${theme.text.tertiary} mt-1`}>
+                                AI Assistant
+                            </p>
                         </div>
 
-                        {/* Quick Start Prompts */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {quickPrompts.map((prompt, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => setMessage(prompt.text)}
-                                    className={`p-5 ${theme.bg.secondary} ${theme.hover} border ${theme.border.primary} rounded-xl transition-all duration-200 text-left group hover:scale-[1.02] hover:shadow-sm`}
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="text-2xl">{prompt.icon}</div>
-                                        <div>
-                                            <h3 className={`${theme.text.primary} font-medium mb-1`}>
-                                                {prompt.text}
-                                            </h3>
-                                            <p className={`${theme.text.tertiary} text-sm`}>
-                                                {prompt.description}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
+                        {/* Mobile Theme Toggle */}
+                        <button
+                            onClick={toggleTheme}
+                            className={`${theme.bg.secondary} ${theme.hover} border ${theme.border.primary} rounded-lg p-2 transition-all duration-200 active:scale-95`}
+                        >
+                            {isDark ? (
+                                <Sun className={`w-5 h-5 ${theme.text.primary}`} />
+                            ) : (
+                                <Moon className={`w-5 h-5 ${theme.text.primary}`} />
+                            )}
+                        </button>
+                    </div>
 
-                        {/* Chat Input */}
-                        <div className="relative">
-                            <div className={`relative ${theme.bg.secondary} border ${theme.border.primary} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow`}>
-                                <textarea
-                                    value={message}
-                                    onChange={(e) => setMessage(e.target.value)}
-                                    onKeyPress={handleKeyPress}
-                                    placeholder="Type your message here..."
-                                    className={`w-full ${theme.bg.secondary} ${theme.text.primary} placeholder:${theme.text.tertiary} resize-none focus:outline-none text-base leading-relaxed min-h-[80px] max-h-[200px]`}
-                                    rows={3}
-                                />
-                                <div className="flex justify-between items-center mt-4">
-                                    <div className={`text-sm ${theme.text.tertiary}`}>
-                                        Press <kbd className={`px-2 py-1 ${theme.bg.tertiary} rounded text-xs`}>Enter</kbd> to send
-                                    </div>
-                                    <button
-                                        onClick={sendFirstMessage}
-                                        disabled={!message.trim() || isLoadingMessage}
-                                        className={`${theme.accent.primary} ${theme.text.inverse} p-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 disabled:hover:scale-100 shadow-sm`}
-                                    >
-                                        {isLoadingMessage ? (
-                                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                        ) : (
-                                            <Send className="w-5 h-5" />
-                                        )}
-                                    </button>
+                    {/* Welcome Section */}
+                    <div className="text-center space-y-4 sm:space-y-6">
+                        <div className="hidden lg:block">
+                            <div className={`${theme.accent.primary} p-4 rounded-2xl mx-auto w-fit mb-6`}>
+                                <Bot className={`h-12 w-12 ${theme.text.inverse}`} />
+                            </div>
+                            <h1 className={`text-3xl sm:text-4xl font-bold ${theme.text.primary} mb-3`}>
+                                Welcome to VisionChat
+                            </h1>
+                        </div>
+                        <p className={`text-base sm:text-lg ${theme.text.secondary} leading-relaxed max-w-md mx-auto`}>
+                            Start a conversation with our AI assistant. Ask questions, get help with coding, or just chat!
+                        </p>
+                    </div>
+
+                    {/* Input Section */}
+                    <div className={`${theme.bg.secondary} border ${theme.border.primary} rounded-xl p-4 sm:p-6 shadow-sm`}>
+                        <div className="space-y-4">
+                            <div className="flex items-end space-x-3">
+                                <div className="flex-1">
+                                    <input
+                                        type="text"
+                                        value={message}
+                                        onChange={(e) => setMessage(e.target.value)}
+                                        onKeyPress={handleKeyPress}
+                                        placeholder="Type your message here..."
+                                        className={`w-full ${theme.bg.primary} ${theme.text.primary} placeholder:${theme.text.tertiary} border ${theme.border.primary} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-${theme.accent.primary.split('-')[1]}-500 transition-all text-sm sm:text-base`}
+                                        disabled={isLoadingMessage}
+                                    />
                                 </div>
+                                <button
+                                    onClick={sendFirstMessage}
+                                    disabled={!message.trim() || isLoadingMessage}
+                                    className={`${theme.accent.primary} ${theme.text.inverse} px-4 sm:px-6 py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 shadow-sm text-sm sm:text-base`}
+                                >
+                                    {isLoadingMessage ? (
+                                        <div className="flex items-center space-x-2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                            <span className="hidden sm:inline">Starting...</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center space-x-2">
+                                            <Send className="h-4 w-4" />
+                                            <span className="hidden sm:inline">Send</span>
+                                        </div>
+                                    )}
+                                </button>
                             </div>
+
+                            <div className="flex justify-between items-center text-xs">
+                                <span className={`${theme.text.tertiary} hidden sm:inline`}>
+                                    Press <kbd className={`px-1.5 py-0.5 ${theme.bg.tertiary} rounded text-xs`}>Enter</kbd> to send
+                                </span>
+                                <span className={`${theme.text.tertiary} sm:hidden`}>
+                                    Tap send to start chatting
+                                </span>
+                                <span className={`${theme.text.tertiary}`}>
+                                    {message.length > 0 && `${message.length} characters`}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile: Recent Chats */}
+                    {chats.length > 0 && (
+                        <div className="lg:hidden space-y-4">
+                            <h2 className={`text-lg font-semibold ${theme.text.primary}`}>
+                                Recent Conversations
+                            </h2>
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                                {chats.slice(0, 5).map((chat) => (
+                                    <button
+                                        key={chat.chatId}
+                                        onClick={() => router.push(`/chat/${chat.chatId}`)}
+                                        className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${theme.hover} ${theme.bg.tertiary} border ${theme.border.primary} active:scale-[0.98]`}
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <MessageSquare className={`w-4 h-4 ${theme.text.tertiary} mt-0.5 flex-shrink-0`} />
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`${theme.text.primary} text-sm font-medium truncate`}>
+                                                    {chat.title}
+                                                </p>
+                                                <p className={`${theme.text.tertiary} text-xs mt-1`}>
+                                                    {new Date(chat.updatedAt).toLocaleDateString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric'
+                                                    })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Mobile: User Info */}
+                    <div className="lg:hidden">
+                        <div className={`flex items-center gap-3 ${theme.text.primary} p-3 rounded-lg ${theme.bg.tertiary} border ${theme.border.primary}`}>
+                            {user.avatar ? (
+                                <img
+                                    src={user.avatar}
+                                    alt={user.name}
+                                    className="w-8 h-8 rounded-full"
+                                />
+                            ) : (
+                                <div className={`w-8 h-8 ${theme.accent.primary} rounded-full flex items-center justify-center`}>
+                                    <User className={`w-4 h-4 ${theme.text.inverse}`} />
+                                </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{user.name}</p>
+                                <p className={`text-xs ${theme.text.tertiary} truncate`}>{user.email}</p>
+                            </div>
+                            <button
+                                onClick={handleLogout}
+                                className={`p-2 ${theme.text.secondary} ${theme.hover} rounded-lg transition-all duration-200 active:scale-95`}
+                                title="Sign Out"
+                            >
+                                <LogOut className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
                 </div>
